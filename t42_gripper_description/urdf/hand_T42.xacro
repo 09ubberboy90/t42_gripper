@@ -22,46 +22,45 @@
  		<color rgba="0.2 0.2 .2 1"/>
  	</xacro:macro>
 
-  <xacro:macro name="pad_color">
-    <color rgba="0.106 0.227 0.631 1"/>
-  </xacro:macro>  
+    <xacro:macro name="pad_color">
+        <color rgba="0.106 0.227 0.631 1"/>
+    </xacro:macro>  
 
-  <xacro:property name="rubber_friction_coefficient" value="1.16" />  <!-- True: 1.16 -->
-  <xacro:property name="rubber_contact_stiffness_coefficient" value="1000000.0" />
-  <xacro:property name="rubber_contact_damping_coefficient" value="1.0" />
-  <xacro:property name="swivel_distance" value="0.0260" /> <!-- Not sure if this is the right distance for T42 -->
-  <xacro:property name="joint_damping_coefficient" value="7.0" />
-  <xacro:property name="joint_friction_coefficient" value="0.0" />
+    <xacro:property name="rubber_friction_coefficient" value="1.16" />  <!-- True: 1.16 -->
+    <xacro:property name="rubber_contact_stiffness_coefficient" value="1000000.0" />
+    <xacro:property name="rubber_contact_damping_coefficient" value="1.0" />
+    <xacro:property name="swivel_distance" value="0.0260" /> <!-- Not sure if this is the right distance for T42 -->
+    <xacro:property name="joint_damping_coefficient" value="7.0" />
+    <xacro:property name="joint_friction_coefficient" value="0.0" />
 
 
 
-  <link name="world" />
+    <link name="world" />
 
     <link name="base_link">
-      <visual>
-          <origin rpy="1.57 -1.57 -1.57" xyz="0.065 0 -0.04"/>
-          <geometry>
-            <mesh filename="package://t42_gripper_description/meshes/base_link.STL"/>
-          </geometry>
-          <material
-            name="">
-            <xacro:base_color/>
-          </material>
-      </visual>
-      <inertial>
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <mass value="0.1"/>
-          <inertia
+        <visual>
+            <origin rpy="0 0 1.57" xyz="0.1 -0.035 -0.095"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/actuator_block_t42.stl"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0.1 0.1 0.1 1"/>
+            </material>
+        </visual>
+        <!-- <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia
             ixx="0.0" ixy="0.0" ixz="0.0"
             iyy="0.0" iyz="0.0"
             izz="0.0"/>
-      </inertial>
-      <!-- <collision>
+        </inertial> -->
+        <!-- <collision>
         <origin rpy="1.57 0 -1.57" xyz="0.06 0.017 0"/>
         <geometry>
-          <mesh filename="package://t42_gripper_description/meshes/base_link.STL"/>
+            <mesh filename="package://t42_gripper_description/meshes/base_link.STL"/>
         </geometry>
-      </collision> -->
+        </collision> -->
     </link>
 
 
@@ -112,17 +111,16 @@
             <material name="green">
                 <color rgba="0.1 1.0 0.1 1.0" />
             </material>
-            <origin xyz="-0.0 -0.0 -0.0" />
-            <!-- <origin xyz="-0.015875 -0.011709 -0.048006" /> -->  <!-- Pointed distal tips -->
+            <origin xyz="-0.015875 -0.011709 -0.048006" />  <!-- Pointed distal tips -->
             <geometry>
-                <mesh filename="package://t42_gripper_description/meshes/distal_round_t42.STL" scale="0.001 0.001 0.001" />
+                <mesh filename="package://t42_gripper_description/meshes/distal_round_t42_filled.STL" scale="0.001 0.001 0.001" />
                 <!-- <mesh filename="package://t42_gripper_description/meshes/distal_t42.STL" scale="0.025400 0.025400 0.025400" /> --> <!-- Pointed distal tips -->
             </geometry>
         </visual>
         <collision>
-            <origin xyz="-0.0 -0.0 -0.0" />
+            <origin xyz="-0.015875 -0.011709 -0.048006" />  <!-- Pointed distal tips -->
             <geometry>
-                <mesh filename="package://t42_gripper_description/meshes/distal_round_t42.STL" scale="0.001 0.001 0.001" />
+                <mesh filename="package://t42_gripper_description/meshes/distal_round_t42_filled.STL" scale="0.001 0.001 0.001" />
             </geometry>
         </collision>
     </link>
@@ -175,13 +173,13 @@
             <material name="orange">
                 <color rgba="0.9 0.3 0.1 1.0" />
             </material>
-            <origin xyz="0 0 0" />
+            <origin xyz="-0.015875 -0.011709 -0.048006" />
             <geometry>
                 <mesh filename="package://t42_gripper_description/meshes/distal_round_t42_filled.STL" scale="0.001 0.001 0.001" />
             </geometry>
         </visual>
         <collision>
-            <origin xyz="0 0 0" />
+            <origin xyz="-0.015875 -0.011709 -0.048006" />
             <geometry>
                 <mesh filename="package://t42_gripper_description/meshes/distal_round_t42_filled.STL" scale="0.001 0.001 0.001" />
             </geometry>
@@ -194,12 +192,10 @@
 
 
 
-    <joint name="world_to_base" type="prismatic">
-        <origin rpy="0 0 0" xyz="-0.06 0.000000 0.2" />
+    <joint name="world_to_base" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0" />
         <parent link="world" />
         <child link="base_link" />
-        <axis xyz="0 0 1"/>
-        <limit effort="1000.0" lower="-100." upper="100." velocity="1"/>
     </joint>  
 
     <joint name="base_link_to_swivel_1" type="fixed">
@@ -208,9 +204,9 @@
         <child link="swivel_1" />
     </joint>
 
-    <joint name="base_to_finger_1_1" type="revolute">
+    <joint name="swivel_1_to_finger_1_1" type="revolute">
         <origin rpy="-1.57079632679 1.57079632679 0" xyz="-0.016510 -${swivel_distance} 0.000000" />
-        <parent link="base_link" />
+        <parent link="swivel_1" />
         <child link="finger_1_1" />
         <limit effort="10000" lower="0.0" upper="3.0" velocity="2" />
         <axis xyz="1 0 0" />
@@ -232,9 +228,9 @@
         <child link="swivel_2" />
     </joint>
 
-    <joint name="base_to_finger_2_1" type="revolute">
+    <joint name="swivel_2_to_finger_2_1" type="revolute">
         <origin rpy="1.57079632679 -1.57079632679 0" xyz="-0.016510 ${swivel_distance} 0.0000" />
-        <parent link="base_link" />
+        <parent link="swivel_2" />
         <child link="finger_2_1" />
         <limit effort="10000" lower="0.0" upper="3.0" velocity="2" />
         <axis xyz="1 0 0" />
