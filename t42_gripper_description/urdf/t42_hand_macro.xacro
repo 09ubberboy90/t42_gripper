@@ -1,7 +1,14 @@
 <?xml version="1.0"?>
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hand_T42_model">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
+    <xacro:macro name="t42_hand" params="name:=hand_T42_model use_fake_hardware:=true">
+
+    <xacro:include filename="$(find t42_gripper_description)/urdf/t42.ros2_control.xacro" />
+    <!-- ros2 control instance -->
+    <xacro:tr42_ros2_control
+      name="TR42PositionHardwareInterface"
+      use_fake_hardware="$(arg use_fake_hardware)"/>
  	<xacro:macro name="base_color">
  		<color rgba="0.1 0.1 0.1 1"/>
  	</xacro:macro>
@@ -35,11 +42,10 @@
 
 
 
-    <link name="world" />
 
-    <link name="base_link">
+    <link name="t42_base_link">
         <visual>
-            <origin rpy="0 0 1.57" xyz="0.1 -0.035 -0.095"/>
+            <origin rpy="0 0 1.57" xyz="0.1 -0.035 -0.09"/>
             <geometry>
                 <mesh filename="package://t42_gripper_description/meshes/actuator_block_t42.stl"/>
             </geometry>
@@ -58,7 +64,7 @@
         <!-- <collision>
         <origin rpy="1.57 0 -1.57" xyz="0.06 0.017 0"/>
         <geometry>
-            <mesh filename="package://t42_gripper_description/meshes/base_link.STL"/>
+            <mesh filename="package://t42_gripper_description/meshes/t42_base_link.STL"/>
         </geometry>
         </collision> -->
     </link>
@@ -192,9 +198,9 @@
 
 
 
-    <joint name="base_link_to_swivel_1" type="fixed">
+    <joint name="t42_base_link_to_swivel_1" type="fixed">
         <origin rpy="0 0 0" xyz="0 0.000000 0.000000" />
-        <parent link="base_link" />
+        <parent link="t42_base_link" />
         <child link="swivel_1" />
     </joint>
 
@@ -216,9 +222,9 @@
         <dynamics damping="${joint_damping_coefficient}" friction="${joint_friction_coefficient}" />
     </joint>
 
-    <joint name="base_link_to_swivel_2" type="fixed">
+    <joint name="t42_base_link_to_swivel_2" type="fixed">
         <origin rpy="0 0 0" xyz="0 0.000000 0.000000" />
-        <parent link="base_link" />
+        <parent link="t42_base_link" />
         <child link="swivel_2" />
     </joint>
 
@@ -285,7 +291,7 @@
           <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
   </transmission>
-  
+</xacro:macro>
 
 
 </robot>

@@ -8,7 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 install(
-  DIRECTORY config srdf
+  DIRECTORY config srdf launch
   DESTINATION share/${PROJECT_NAME}
 )
 

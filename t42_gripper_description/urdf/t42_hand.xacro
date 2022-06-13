@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="$(arg name)">
+    <link name="world" />
+    <joint name="world_to_gripper" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0.0" />
+        <parent link="world" />
+        <child link="t42_base_link" />
+    </joint>  
+
+    <xacro:arg name="name" default="T42_Hand"/>
+    <xacro:arg name="use_fake_hardware" default="false" />
+    <xacro:include filename="$(find t42_gripper_description)/urdf/t42_hand_macro.xacro"/>
+    <xacro:t42_hand
+    use_fake_hardware="$(arg use_fake_hardware)"
+    name="$(arg name)"/>
+</robot>
