@@ -192,12 +192,6 @@
 
 
 
-    <joint name="world_to_base" type="fixed">
-        <origin rpy="0 0 0" xyz="0 0 0" />
-        <parent link="world" />
-        <child link="base_link" />
-    </joint>  
-
     <joint name="base_link_to_swivel_1" type="fixed">
         <origin rpy="0 0 0" xyz="0 0.000000 0.000000" />
         <parent link="base_link" />
