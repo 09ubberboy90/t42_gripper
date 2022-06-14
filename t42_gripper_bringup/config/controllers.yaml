@@ -50,4 +50,3 @@ t42_gripper_controller:
       - finger_1_1_to_finger_1_2
       - swivel_2_to_finger_2_1
       - finger_2_1_to_finger_2_2
-    allow_partial_joints_goal: false

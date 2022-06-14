@@ -64,8 +64,6 @@ def generate_launch_description():
     )
     load_controllers = []
     for controller in [
-        "t42_right_trajectory_controller",
-        "t42_left_trajectory_controller",
         "t42_gripper_controller",
         "t42_joint_state_broadcaster",
     ]:
@@ -75,6 +73,18 @@ def generate_launch_description():
             executable="spawner",
             arguments=[f"{controller}",
                        "--controller-manager", "controller_manager"],
+        ),
+        ]
+    for controller in [
+        "t42_right_trajectory_controller",
+        "t42_left_trajectory_controller",
+    ]:
+        load_controllers += [
+            Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=[f"{controller}",
+                       "--controller-manager", "controller_manager", "--stopped"],
         ),
         ]
     return LaunchDescription([
