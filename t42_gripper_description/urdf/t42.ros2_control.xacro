@@ -17,7 +17,7 @@
       <joint name="swivel_2_to_finger_2_1">
         <command_interface name="position">
           <param name="min">0</param>
-          <param name="max">3</param>
+          <param name="max">1.57</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-2</param>
@@ -46,7 +46,7 @@
       <joint name="swivel_1_to_finger_1_1">
         <command_interface name="position">
           <param name="min">0</param>
-          <param name="max">3</param>
+          <param name="max">1.57</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-2</param>

@@ -1,4 +1,4 @@
-controller_manager:
+/**:
   ros__parameters:
     update_rate: 100  # Hz
 
@@ -6,6 +6,9 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
 
     t42_left_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    t42_gripper_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
     t42_joint_state_broadcaster:
@@ -21,6 +24,7 @@ t42_right_trajectory_controller:
     joints:
       - swivel_1_to_finger_1_1
       - finger_1_1_to_finger_1_2
+    allow_partial_joints_goal: false
 
 t42_left_trajectory_controller:
   ros__parameters:
@@ -32,4 +36,18 @@ t42_left_trajectory_controller:
     joints:
       - swivel_2_to_finger_2_1
       - finger_2_1_to_finger_2_2
+    allow_partial_joints_goal: false
 
+t42_gripper_controller:
+  ros__parameters:
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    joints:
+      - swivel_1_to_finger_1_1
+      - finger_1_1_to_finger_1_2
+      - swivel_2_to_finger_2_1
+      - finger_2_1_to_finger_2_2
+    allow_partial_joints_goal: false

@@ -61,12 +61,12 @@
             iyy="0.0" iyz="0.0"
             izz="0.0"/>
         </inertial> -->
-        <!-- <collision>
-        <origin rpy="1.57 0 -1.57" xyz="0.06 0.017 0"/>
-        <geometry>
-            <mesh filename="package://t42_gripper_description/meshes/t42_base_link.STL"/>
-        </geometry>
-        </collision> -->
+        <collision>
+            <origin rpy="0 0 1.57" xyz="0.1 -0.035 -0.09"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/actuator_block_t42.stl"/>
+            </geometry>
+        </collision>
     </link>
 
 
@@ -80,6 +80,13 @@
                 <mesh filename="package://t42_gripper_description/meshes/swivel_t42.STL" scale="0.001 0.001 0.001" />
             </geometry>
         </visual>
+        <collision>
+            <origin rpy="0 1.57 1.57" xyz="-0.016510 ${swivel_distance} 0" />
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/swivel_t42.STL" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+
     </link>
 
 
@@ -142,6 +149,13 @@
                 <mesh filename="package://t42_gripper_description/meshes/swivel_t42.STL" scale="0.001 0.001 0.001" />
             </geometry>
         </visual>
+        <collision>
+            <origin rpy="0 1.57 1.57" xyz="-0.016510 -${swivel_distance} 0" />
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/swivel_t42.STL" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+
     </link>
 
     
@@ -208,7 +222,7 @@
         <origin rpy="-1.57079632679 1.57079632679 0" xyz="-0.016510 -${swivel_distance} 0.000000" />
         <parent link="swivel_1" />
         <child link="finger_1_1" />
-        <limit effort="10000" lower="0.0" upper="3.0" velocity="2" />
+        <limit effort="10000" lower="0.0" upper="2" velocity="2" />
         <axis xyz="1 0 0" />
         <dynamics damping="${joint_damping_coefficient}" friction="${joint_friction_coefficient}" />
     </joint>
@@ -232,7 +246,7 @@
         <origin rpy="1.57079632679 -1.57079632679 0" xyz="-0.016510 ${swivel_distance} 0.0000" />
         <parent link="swivel_2" />
         <child link="finger_2_1" />
-        <limit effort="10000" lower="0.0" upper="3.0" velocity="2" />
+        <limit effort="10000" lower="0.0" upper="2" velocity="2" />
         <axis xyz="1 0 0" />
         <dynamics damping="${joint_damping_coefficient}" friction="${joint_friction_coefficient}" />
     </joint>
@@ -248,7 +262,7 @@
     
 
 
- <!-- Transmissions -->
+ <!-- Transmissions
 
 
 
@@ -290,7 +304,7 @@
       <joint name="finger_2_1_to_finger_2_2">
           <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
-  </transmission>
+  </transmission> -->
 </xacro:macro>
 
 

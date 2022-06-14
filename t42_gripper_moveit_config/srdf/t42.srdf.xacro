@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+
+  <!-- robot name parameter -->
+  <xacro:arg name="name" default="t42_gripper"/>
+  <!-- parameters -->
+  <xacro:include filename="$(find t42_gripper_moveit_config)/srdf/t42_macro.srdf.xacro"/>
+
+  <xacro:t42_srdf name="$(arg name)"/>
+
+</robot>

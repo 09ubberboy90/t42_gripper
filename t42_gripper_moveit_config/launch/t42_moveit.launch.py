@@ -1,16 +1,15 @@
 import os
+
 import yaml
-from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
 from ament_index_python.packages import get_package_share_directory
-import xacro
-
-from launch.substitutions import Command,PathJoinSubstitution, FindExecutable
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
-
 from launch_ros.substitutions import FindPackageShare
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import (Command, FindExecutable, LaunchConfiguration,
+                                  PathJoinSubstitution)
+from launch.conditions import IfCondition
 
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -41,21 +40,29 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("t42_gripper_description"), "urdf", "t42_hand.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("t42_gripper_description"), "urdf", "t42_hand.xacro"]),
             " ",
             "name:=",
-            "t42_gripper",            
+            "t42_gripper",
             " ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
-
-    robot_description_semantic_config = load_file(
-        "t42_gripper_moveit_config", "srdf/t42.srdf"
+    robot_description_semantic_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [FindPackageShare("t42_gripper_moveit_config"), "srdf", "t42.srdf.xacro"]
+            ),
+            " ",
+            "name:=",
+            "t42_gripper",
+            " ",
+        ]
     )
-    robot_description_semantic = {
-        "robot_description_semantic": robot_description_semantic_config
-    }
+    robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
     # kinematics_yaml = load_yaml(
     #     "moveit_resources_panda_moveit_config", "config/kinematics.yaml"
@@ -87,9 +94,10 @@ def generate_launch_description():
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
+    launch_rviz = LaunchConfiguration("launch_rviz")
     trajectory_execution = {
         "allow_trajectory_execution": True,
-        "moveit_manage_controllers": True,
+        "moveit_manage_controllers": False,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
@@ -116,15 +124,16 @@ def generate_launch_description():
             planning_scene_monitor_parameters,
         ],
         arguments=['--ros-args', '--log-level', 'info'],
+        # namespace="t42"
 
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ur_moveit_config"), "rviz", "view_robot.rviz"]
+        [FindPackageShare("t42_gripper_moveit_config"), "rviz", "view_robot.rviz"]
     )
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
-        name="rviz2",
+        name="rviz2_gripper",
         output="log",
         arguments=["-d", rviz_config_file, '--ros-args', '--log-level', 'warn'],
         parameters=[
@@ -132,6 +141,8 @@ def generate_launch_description():
             robot_description_semantic,
             ompl_planning_pipeline_config,
         ],
+        condition=IfCondition(launch_rviz),
+
     )
 
     # Warehouse mongodb server
@@ -148,6 +159,9 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "launch_rviz", default_value="true", description="Launch RViz?"),
+
             rviz_node,
             run_move_group_node,
             mongodb_server_node,

@@ -43,7 +43,10 @@ def generate_launch_description():
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description,],
+        # {"frame_prefix": "t42/"}],
+        #namespace="t42"
+
     )
     initial_joint_controllers = PathJoinSubstitution(
         [FindPackageShare("t42_gripper_bringup"), "config", "controllers.yaml"]
@@ -57,20 +60,22 @@ def generate_launch_description():
             "stderr": "screen",
         },
         condition=IfCondition(use_fake_hardware),
+        #namespace="t42"
     )
     load_controllers = []
     for controller in [
         "t42_right_trajectory_controller",
         "t42_left_trajectory_controller",
+        "t42_gripper_controller",
         "t42_joint_state_broadcaster",
     ]:
         load_controllers += [
-            ExecuteProcess(
-                cmd=[
-                    "ros2 control load_controller --set-state start {}".format(controller)],
-                shell=True,
-                output="screen",
-            )
+            Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=[f"{controller}",
+                       "--controller-manager", "controller_manager"],
+        ),
         ]
     return LaunchDescription([
         DeclareLaunchArgument(

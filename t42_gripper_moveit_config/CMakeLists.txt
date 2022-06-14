@@ -8,7 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 install(
-  DIRECTORY config srdf launch
+  DIRECTORY config srdf launch rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
