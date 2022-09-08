@@ -15,6 +15,7 @@
   <exec_depend>t42_gripper_moveit_config</exec_depend>
   <exec_depend>t42_gripper_description</exec_depend>
   <exec_depend>t42_gripper_bringup</exec_depend>
+  <exec_depend>t42_gripper_controller</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -2,7 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, LogInfo
 from launch.substitutions import LaunchConfiguration, PythonExpression,Command,PathJoinSubstitution, FindExecutable
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
@@ -74,6 +74,7 @@ def generate_launch_description():
             arguments=[f"{controller}",
                        "--controller-manager", "controller_manager"],
         ),
+        
         ]
     for controller in [
         "t42_right_trajectory_controller",
@@ -94,7 +95,8 @@ def generate_launch_description():
             description="Start robot with fake hardware mirroring command to its states.",
         ),
         robot_state_publisher,
-        control_node
+        control_node,
+        LogInfo(msg = robot_description_content)
     ] + load_controllers
 
     )
