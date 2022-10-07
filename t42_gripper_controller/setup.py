@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "gripper_controller = t42_gripper_controller.position_controller:main"
+            "gripper_controller = t42_gripper_controller.position_controller:main",
+            "test_motors = t42_gripper_controller.test_motors:main"
         ],
     },
 )

@@ -12,7 +12,7 @@ class GripperController(Node):
 
     def __init__(self):
         super().__init__('gripper_controller')
-        self.arduino = serial.Serial(port='/dev/ttyACM0', baudrate=57600, timeout=.1)
+        self.arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=.1)
 
         self.right_motor = self.create_subscription(
             Float32,
@@ -21,7 +21,7 @@ class GripperController(Node):
             10)
         self.left_motor = self.create_subscription(
             Float32,
-            'left_motor',
+            'left_motor_control',
             self.left_callback,
             10)
 
@@ -41,7 +41,11 @@ class GripperController(Node):
         #         self.get_logger().info(el.decode('utf-8'))
         #     except:
         #         print(el)
-        txt = self.arduino.read_all().decode('utf-8')
+        txt = ""
+        tmp =  self.arduino.read()
+        while tmp and tmp != '\n':
+            tmp =  self.arduino.read()
+            txt += tmp.decode("utf-8")
         if txt:
             self.parse_response(txt)
         self.arduino.write(f"Right:{self.right},Left:{self.left}\n".encode('utf-8'))
@@ -58,10 +62,14 @@ class GripperController(Node):
         self.left_vals = np.roll(self.left_vals,-1)
         self.right_vals[-1] = right
         self.left_vals[-1] = left
+        print(motors)
         right_mean = np.median(self.right_vals)
         left_mean = np.median(self.left_vals)
-        self.right_publisher.publish(right_mean)
-        self.left_publisher.publish(left_mean)
+        msg = Float32()
+        msg.data = float(right_mean)
+        self.right_publisher.publish(msg)
+        msg.data = float(left_mean)
+        self.left_publisher.publish(msg)
         
     def right_callback(self, msg:Float32):
         self.right = msg.data
