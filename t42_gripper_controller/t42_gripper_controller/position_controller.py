@@ -28,7 +28,7 @@ class GripperController(Node):
         self.right_publisher = self.create_publisher(Float32, 'right_motor_states', 10)
         self.left_publisher = self.create_publisher(Float32, 'left_motor_states', 10)
 
-        self.timer = self.create_timer(.25, self.timer_callback)
+        self.timer = self.create_timer(.1, self.timer_callback)
         self.left = 0.0
         self.right = 0.0
 
@@ -50,11 +50,17 @@ class GripperController(Node):
             self.parse_response(txt)
         self.arduino.write(f"Right:{self.right},Left:{self.left}\n".encode('utf-8'))
 
+    def convert_to_degrees(self, val):
+        return val*360/4095
+
+    def convert_from_degrees(self, val):
+        return val*4095/360
+
     def parse_response(self, response):
         motors = response.split(',')
         try:
-            right = float(motors[0].split(':')[-1])
-            left = float(motors[1].split(':')[-1])
+            right = self.convert_to_degrees(int(motors[0].split(':')[-1]))
+            left = self.convert_to_degrees(int(motors[1].split(':')[-1]))
         except:
             print(f"Failed to handle {response}")
             return
@@ -62,20 +68,20 @@ class GripperController(Node):
         self.left_vals = np.roll(self.left_vals,-1)
         self.right_vals[-1] = right
         self.left_vals[-1] = left
-        print(motors)
         right_mean = np.median(self.right_vals)
         left_mean = np.median(self.left_vals)
         msg = Float32()
+        print(f"{right} {left}")
         msg.data = float(right_mean)
         self.right_publisher.publish(msg)
         msg.data = float(left_mean)
         self.left_publisher.publish(msg)
         
     def right_callback(self, msg:Float32):
-        self.right = msg.data
+        self.right = self.convert_from_degrees(msg.data)
 
     def left_callback(self, msg):
-        self.left = msg.data
+        self.left = self.convert_from_degrees(msg.data)
 
 
 def main(args=None):

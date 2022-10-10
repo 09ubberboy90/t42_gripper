@@ -37,13 +37,13 @@ class GripperController(Node):
         self.right_publisher.publish(msg)
         msg.data = float(self.left)
         self.left_publisher.publish(msg)
-        if self.counter < 200:    
+        if self.counter < 250:    
             self.right += 1
             self.left += 1
-        if 200 < self.counter < 400:
+        if 250 < self.counter < 500:
             self.right -= 1
             self.left -= 1
-        if self.counter > 600:
+        if self.counter > 500:
             self.counter = 0
         self.counter += 1
         
