@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             "gripper_controller = t42_gripper_controller.position_controller:main",
-            "test_motors = t42_gripper_controller.test_motors:main"
+            "test_motors = t42_gripper_controller.test_motors:main",
+            "joint_sim_controller = t42_gripper_controller.joint_sim_controller:main"
         ],
     },
 )
