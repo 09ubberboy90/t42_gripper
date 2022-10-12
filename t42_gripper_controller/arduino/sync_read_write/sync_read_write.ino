@@ -242,30 +242,41 @@ void loop() {
   if (counter % 6 == 0) // every .5s
   { 
     recv_cnt = dxl.syncRead(&sr_infos_load, 100);
-    tmpstr.concat("Load/Right:");
-    tmpstr.concat(sr_data_load[1].present_data);
-    tmpstr.concat(",Left:");
-    tmpstr.concat(sr_data_load[0].present_data);
-    // tmpstr.concat("/Received:");
-    // tmpstr.concat(recv_cnt);
+    tmpstr.concat("Load/");
+    if(recv_cnt > 0)
+    {
+      tmpstr.concat("Right:");
+      tmpstr.concat(sr_data_load[1].present_data);
+      tmpstr.concat(",Left:");
+      tmpstr.concat(sr_data_load[0].present_data);
+    }
+    tmpstr.concat("/Received:");
+    tmpstr.concat(recv_cnt);
+    DEBUG_SERIAL.println(tmpstr);
     // tmpstr.concat("/Error0:");
     // tmpstr.concat(info_xels_sr_load[0].error);
     // tmpstr.concat("/Error1:");
     // tmpstr.concat(info_xels_sr_load[1].error);
     // tmpstr.concat("/Error2:");
     // tmpstr.concat(dxl.getLastLibErrCode());
-    DEBUG_SERIAL.println(tmpstr);
 
   }
   if (counter % 6 == 3) // every .5s
   { 
     recv_cnt = dxl.syncRead(&sr_infos_pose, 100);
-    tmpstr.concat("Pose/Right:");
-    tmpstr.concat(sr_data_pose[1].present_data);
-    tmpstr.concat(",Left:");
-    tmpstr.concat(sr_data_pose[0].present_data);
+    tmpstr.concat("Pose/");
+    if(recv_cnt > 0)
+    {
+      tmpstr.concat("Right:");
+      tmpstr.concat(sr_data_pose[1].present_data);
+      tmpstr.concat(",Left:");
+      tmpstr.concat(sr_data_pose[0].present_data);
+      DEBUG_SERIAL.println(tmpstr);
+    }
+    tmpstr.concat("/Received:");
+    tmpstr.concat(recv_cnt);
     DEBUG_SERIAL.println(tmpstr);
-    
+
   }
   counter +=1;
 
