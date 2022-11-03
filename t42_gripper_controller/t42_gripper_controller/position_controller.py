@@ -14,7 +14,7 @@ class GripperController(Node):
 
     def __init__(self):
         super().__init__('gripper_controller')
-        self.arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=.1)
+        self.arduino = serial.Serial(port='/dev/ttyACM2', baudrate=2000000, timeout=.1)
         self.group1 = MutuallyExclusiveCallbackGroup()
         self.group2 = MutuallyExclusiveCallbackGroup()
 
@@ -27,7 +27,7 @@ class GripperController(Node):
         
         self.states_publisher = self.create_publisher(JointState, 't42_motor_states', 10)
 
-        self.timer = self.create_timer(.1, self.timer_callback, callback_group=self.group1)
+        self.timer = self.create_timer(.01, self.timer_callback, callback_group=self.group1)
         self.requested = {"right": 0, "left":0 }
         
 
@@ -37,21 +37,19 @@ class GripperController(Node):
         #         self.get_logger().info(el.decode('utf-8'))
         #     except:
         #         print(el)
-        tmp = self.arduino.read()
         try:
+            tmp = self.arduino.read()
             txt = tmp.decode("utf-8")
-        except:
-            print(tmp)
-            return
-        while tmp and tmp != '\n':
-            tmp =  self.arduino.read()
-            try:
+            while tmp and tmp != '\n' and tmp != '\r':
+                tmp =  self.arduino.read()
                 txt += tmp.decode("utf-8")
-            except:
-                print(tmp)
-                return
-        if txt:
-            self.parse_response(txt)
+        except Exception as e: 
+            print("Failed to parse", e)
+            return
+        for el in txt.split("\r\n"):
+            if el:
+                # print(len(el.encode('utf-8')))
+                self.parse_response(el)
         self.arduino.write(f"Right:{self.requested['right']},Left:{self.requested['left']}\n".encode('utf-8'))
 
     def convert_to_degrees(self, val):
@@ -61,13 +59,16 @@ class GripperController(Node):
         return val*4095/360
 
     def parse_response(self, response):
-        print(response)
         try:
             response = response.split('/')
+            print(response)
             type = response[0]
-            motors = response[1].split(',')
-            right = motors[0].split(':')[-1]
-            left = motors[1].split(':')[-1]
+            if response[1] != "":    
+                motors = response[1].split(',')
+                right = motors[0].split(':')[-1]
+                left = motors[1].split(':')[-1]
+            else:
+                return
         except:
             print(f"Failed to handle {response}")
             return

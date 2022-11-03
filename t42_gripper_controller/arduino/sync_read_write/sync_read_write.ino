@@ -24,42 +24,10 @@
 
 #include <Dynamixel2Arduino.h>
 #include <stdlib.h>
+#include <Wire.h> // <-- remove spaces
 
-// Please modify it to suit your hardware.
-#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
-  #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(7, 8); // DYNAMIXELShield UART RX/TX
-  #define DXL_SERIAL   Serial
-  #define DEBUG_SERIAL soft_serial
-  const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#elif defined(ARDUINO_SAM_DUE) // When using DynamixelShield
-  #define DXL_SERIAL   Serial
-  #define DEBUG_SERIAL SerialUSB
-  const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#elif defined(ARDUINO_SAM_ZERO) // When using DynamixelShield
-  #define DXL_SERIAL   Serial1
-  #define DEBUG_SERIAL SerialUSB
-  const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#elif defined(ARDUINO_OpenCM904) // When using official ROBOTIS board with DXL circuit.
-  #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (Serial1 for the DXL port on the OpenCM 9.04 board)
-  #define DEBUG_SERIAL Serial
-  const int DXL_DIR_PIN = 22; //OpenCM9.04 EXP Board's DIR PIN. (28 for the DXL port on the OpenCM 9.04 board)
-#elif defined(ARDUINO_OpenCR) // When using official ROBOTIS board with DXL circuit.
-  // For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it.
-  // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
-  #define DXL_SERIAL   Serial3
-  #define DEBUG_SERIAL Serial
-  const int DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
-#elif defined(ARDUINO_OpenRB)  // When using OpenRB-150
-  //OpenRB does not require the DIR control pin.
-  #define DXL_SERIAL Serial1
-  #define DEBUG_SERIAL Serial
-  const int DXL_DIR_PIN = -1;
-#else // Other boards when using DynamixelShield
-  #define DXL_SERIAL   Serial1
-  #define DEBUG_SERIAL Serial
-  const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#endif
+#define DXL_SERIAL   Serial
+const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 
 
 /* syncRead
@@ -125,6 +93,21 @@ typedef struct sw_data{
   int32_t goal_position;
 } __attribute__((packed)) sw_data_t;
 
+typedef struct {
+  int right;
+  int left;
+} motor_control_t;
+
+typedef struct {
+  int load_right;
+  int load_left;
+  int pose_right;
+  int pose_left;
+} motor_states_t;
+
+volatile motor_states_t motor_states;
+volatile motor_control_t motor_control;
+
 
 sr_data_t sr_data_load[DXL_ID_CNT];
 sr_data_t sr_data_pose[DXL_ID_CNT];
@@ -169,15 +152,15 @@ void fill_sr_info(DYNAMIXEL::InfoSyncReadInst_t *sr_infos, DYNAMIXEL::XELInfoSyn
 void setup() {
   // put your setup code here, to run once:
   uint8_t i;
-  pinMode(LED_BUILTIN, OUTPUT);
-  DEBUG_SERIAL.begin(9600);
-  dxl.begin(115200);
+  Wire.begin();
+  dxl.begin(2000000);
   dxl.setPortProtocolVersion(DYNAMIXEL_PROTOCOL_VERSION);
 
 // Prepare the SyncRead structure
   for(i = 0; i < DXL_ID_CNT; i++){
     dxl.torqueOff(DXL_ID_LIST[i]);
-    dxl.setOperatingMode(DXL_ID_LIST[i], OP_POSITION);
+    dxl.setOperatingMode(DXL_ID_LIST[i], 4); //Extended position // Should fix reset to zero
+
   }
   dxl.torqueOn(BROADCAST_ID);
 
@@ -202,82 +185,40 @@ void setup() {
 }
 
 void loop() {
-  String data = "";
-  int tmp;
-  String tmpstr = "";
-
+  int n = Wire.requestFrom(4, sizeof(motor_control));    
+  Wire.readBytes((byte*)&motor_control, sizeof(motor_control));
   // put your main code here, to run repeatedly:
-  uint8_t i, recv_cnt;
-  while (DEBUG_SERIAL.available())
-  {
-    char character = DEBUG_SERIAL.read(); // Receive a single character from the software serial port
-    data.concat(character); // Add the received character to the receive buffer
-    if (character == '\n')
-    {
-      data.trim();
-      int comma_idx = data.indexOf(",");
-      right = data.substring(0,comma_idx);
-      left = data.substring(comma_idx+1);
-      tmp = right.indexOf(":");
-      sw_data[1].goal_position = right.substring(tmp+1).toInt();
-      tmp = left.indexOf(":");
-      sw_data[0].goal_position = left.substring(tmp+1).toInt();      
-      
-      // Clear receive buffer so we're ready to receive the next line
-      data = "";
-    }
-  }
+  uint8_t recv_cnt;
   // Update the SyncWrite packet status
+  sw_data[0].goal_position = motor_control.left;
+  sw_data[1].goal_position = motor_control.right;
   sw_infos.is_info_changed = true;
 
   
   // Build a SyncWrite Packet and transmit to DYNAMIXEL  
   dxl.syncWrite(&sw_infos);
-  delay(100);
-
-
-
   // Transmit predefined SyncRead instruction packet
   // and receive a status packet from each DYNAMIXEL
-  if (counter % 6 == 0) // every .5s
-  { 
+  if (counter %10 == 0)
+  {
     recv_cnt = dxl.syncRead(&sr_infos_load, 100);
-    tmpstr.concat("Load/");
     if(recv_cnt > 0)
     {
-      tmpstr.concat("Right:");
-      tmpstr.concat(sr_data_load[1].present_data);
-      tmpstr.concat(",Left:");
-      tmpstr.concat(sr_data_load[0].present_data);
+      motor_states.load_right = sr_data_load[1].present_data;
+      motor_states.load_left = sr_data_load[0].present_data;
     }
-    tmpstr.concat("/Received:");
-    tmpstr.concat(recv_cnt);
-    DEBUG_SERIAL.println(tmpstr);
-    // tmpstr.concat("/Error0:");
-    // tmpstr.concat(info_xels_sr_load[0].error);
-    // tmpstr.concat("/Error1:");
-    // tmpstr.concat(info_xels_sr_load[1].error);
-    // tmpstr.concat("/Error2:");
-    // tmpstr.concat(dxl.getLastLibErrCode());
 
-  }
-  if (counter % 6 == 3) // every .5s
-  { 
+
     recv_cnt = dxl.syncRead(&sr_infos_pose, 100);
-    tmpstr.concat("Pose/");
     if(recv_cnt > 0)
     {
-      tmpstr.concat("Right:");
-      tmpstr.concat(sr_data_pose[1].present_data);
-      tmpstr.concat(",Left:");
-      tmpstr.concat(sr_data_pose[0].present_data);
-      DEBUG_SERIAL.println(tmpstr);
+      motor_states.pose_right = sr_data_pose[1].present_data;
+      motor_states.pose_left = sr_data_pose[0].present_data;
     }
-    tmpstr.concat("/Received:");
-    tmpstr.concat(recv_cnt);
-    DEBUG_SERIAL.println(tmpstr);
-
+    Wire.beginTransmission(4); // transmit to device #4
+    Wire.write((byte *)&motor_states, sizeof(motor_states));  /*send string on request */
+    Wire.endTransmission();    // stop transmitting
   }
-  counter +=1;
-
+  counter++;
+  delay(10);
 }

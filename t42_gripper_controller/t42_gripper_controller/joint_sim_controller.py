@@ -31,13 +31,12 @@ class GripperController(Node):
         for idx, key in enumerate(incoming.name):
             idx_remap[key] = idx
         try:
-            outgoing.data = [self.adjust_feedback(incoming.effort[idx_remap["right"]]), 
+            outgoing.data = [0.0,0.0,100.0,100.0,100.0,
+                        self.adjust_feedback(incoming.effort[idx_remap["right"]]), 
                         self.adjust_feedback(incoming.effort[idx_remap["left"]]), 
-                        100,100,100, # full resistance for other finger
-                        100,100,100,100,100,100] # no vibration
+                        0.0,0.0,0.0] # no vibration
         except:
-            pass
-        print(outgoing.data)
+            return
         self.glove_pub.publish(outgoing)
 
     def senseglove_callback(self, incoming:JointState):
@@ -52,17 +51,16 @@ class GripperController(Node):
         self.motor_pub.publish(outgoing)
         
     def adjust_feedback(self, val):
-        print(val)
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return (abs(val)%1024) * 100 / 1024
+        return float((abs(val)%1024) * 100 / 1024)
     
     def index_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0) ## Max 250 degree for safety
+        return min(max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0),250.0) ## Max 250 degree for safety
     
     def thumb_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0) ## Max 250 degree for safety
+        return min(max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0),250.0) ## Max 250 degree for safety
 
 
 
