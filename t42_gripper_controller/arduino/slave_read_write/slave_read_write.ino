@@ -2,6 +2,8 @@
 
 #include <Wire.h>
 #include <Stream.h>
+#include <Dynamixel2Arduino.h>
+
 typedef struct {
   int right;
   int left;
@@ -12,6 +14,9 @@ typedef struct {
   int load_left;
   int pose_right;
   int pose_left;
+  int error_pose;
+  int error_load;
+
 } motor_states_t;
 
 volatile motor_states_t motor_states;
@@ -31,7 +36,8 @@ void setup()
   Wire.onReceive(receiveEvent); // register event
   Wire.onRequest(requestEvent);
   Serial.begin(2000000); // start serial for output
-  // Serial.println(sizeof(motor_states));
+  Serial.println(DYNAMIXEL::getControlTableItemInfo(MX28_2, ControlTableItem::PRESENT_LOAD).addr);
+  Serial.println(DYNAMIXEL::getControlTableItemInfo(MX28_2, ControlTableItem::PRESENT_LOAD).addr_length);
   // Serial.println(sizeof(motor_control));
 }
 
@@ -61,6 +67,10 @@ void loop()
     tmpstr.concat(motor_states.pose_right);
     tmpstr.concat(",Left:");
     tmpstr.concat(motor_states.pose_left);
+    tmpstr.concat("\r\nError/Pose:");
+    tmpstr.concat(motor_states.error_pose);
+    tmpstr.concat(",Load:");
+    tmpstr.concat(motor_states.error_load);
     Serial.println(tmpstr);
     newData = false;
   }

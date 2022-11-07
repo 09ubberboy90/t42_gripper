@@ -14,7 +14,7 @@ class GripperController(Node):
 
     def __init__(self):
         super().__init__('gripper_controller')
-        self.arduino = serial.Serial(port='/dev/ttyACM2', baudrate=2000000, timeout=.1)
+        self.arduino = serial.Serial(port='/dev/ttyACM1', baudrate=2000000, timeout=.1)
         self.group1 = MutuallyExclusiveCallbackGroup()
         self.group2 = MutuallyExclusiveCallbackGroup()
 

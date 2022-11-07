@@ -71,7 +71,7 @@ const uint8_t BROADCAST_ID = 254;
 const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
-const uint16_t user_pkt_buf_cap = 128;
+const uint16_t user_pkt_buf_cap = 256;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
 // Starting address of the Data to read; Present Position = 132
@@ -81,7 +81,7 @@ const uint16_t SR_ADDR_LEN_POSE = 4;
 // Starting address of the Data to read; Present Position = 132
 const uint16_t SR_START_ADDR_LOAD = 126;
 // Length of the Data to read; Length of Position data of X series is 4 byte
-const uint16_t SR_ADDR_LEN_LOAD = 4;
+const uint16_t SR_ADDR_LEN_LOAD = 2;
 // Starting address of the Data to write; Goal Position = 116
 const uint16_t SW_START_ADDR = 116;
 // Length of the Data to write; Length of Position data of X series is 4 byte
@@ -89,6 +89,9 @@ const uint16_t SW_ADDR_LEN = 4;
 typedef struct sr_data{
   int32_t present_data;
 } __attribute__((packed)) sr_data_t;
+typedef struct sr_load_data{
+  int16_t present_data;
+} __attribute__((packed)) sr_load_data_t;
 typedef struct sw_data{
   int32_t goal_position;
 } __attribute__((packed)) sw_data_t;
@@ -103,14 +106,16 @@ typedef struct {
   int load_left;
   int pose_right;
   int pose_left;
+  int error_pose;
+  int error_load;
 } motor_states_t;
 
 volatile motor_states_t motor_states;
 volatile motor_control_t motor_control;
 
 
-sr_data_t sr_data_load[DXL_ID_CNT];
-sr_data_t sr_data_pose[DXL_ID_CNT];
+sr_load_data_t sr_data_load[DXL_ID_CNT] = {NULL};
+sr_data_t sr_data_pose[DXL_ID_CNT] = {NULL};
 DYNAMIXEL::InfoSyncReadInst_t sr_infos_pose;
 DYNAMIXEL::XELInfoSyncRead_t info_xels_sr_pose[DXL_ID_CNT];
 
@@ -130,6 +135,7 @@ int32_t goal_position[2] = {0, 0};
 uint8_t goal_position_index = 0;
 int counter = 0;
 String right, left;
+uint8_t recv_cnt;
 
 void fill_sr_info(DYNAMIXEL::InfoSyncReadInst_t *sr_infos, DYNAMIXEL::XELInfoSyncRead_t *info_xels_sr, sr_data_t *sr_data, uint16_t addr, uint16_t addr_length){
   sr_infos->packet.p_buf = user_pkt_buf;
@@ -165,8 +171,42 @@ void setup() {
   dxl.torqueOn(BROADCAST_ID);
 
   // Fill the members of structure to syncRead using external user packet buffer
-  fill_sr_info(&sr_infos_pose, info_xels_sr_pose, sr_data_pose, SR_START_ADDR_POSE, SR_ADDR_LEN_POSE);
-  fill_sr_info(&sr_infos_load, info_xels_sr_load, sr_data_load, SR_START_ADDR_LOAD, SR_ADDR_LEN_LOAD);
+  // fill_sr_info(&sr_infos_pose, info_xels_sr_pose, sr_data_pose, SR_START_ADDR_POSE, SR_ADDR_LEN_POSE);
+  // fill_sr_info(&sr_infos_load, info_xels_sr_load, sr_data_load, SR_START_ADDR_LOAD, SR_ADDR_LEN_LOAD);
+
+  sr_infos_load.packet.p_buf = user_pkt_buf;
+  sr_infos_load.packet.buf_capacity = user_pkt_buf_cap;
+  sr_infos_load.packet.is_completed = false;
+  sr_infos_load.addr = SR_START_ADDR_LOAD;
+  sr_infos_load.addr_length = SR_ADDR_LEN_LOAD;
+  sr_infos_load.p_xels = info_xels_sr_load;
+  sr_infos_load.xel_count = 0;  
+
+  for(uint8_t i = 0; i < DXL_ID_CNT; i++){
+    info_xels_sr_load[i].id = DXL_ID_LIST[i];
+    info_xels_sr_load[i].p_recv_buf = (uint8_t*)&sr_data_load[i];
+    sr_infos_load.xel_count++;
+  }
+  sr_infos_load.is_info_changed = true;
+
+  sr_infos_pose.packet.p_buf = user_pkt_buf;
+  sr_infos_pose.packet.buf_capacity = user_pkt_buf_cap;
+  sr_infos_pose.packet.is_completed = false;
+  sr_infos_pose.addr = SR_START_ADDR_POSE;
+  sr_infos_pose.addr_length = SR_ADDR_LEN_POSE;
+  sr_infos_pose.p_xels = info_xels_sr_pose;
+  sr_infos_pose.xel_count = 0;  
+
+  for(uint8_t i = 0; i < DXL_ID_CNT; i++){
+    info_xels_sr_pose[i].id = DXL_ID_LIST[i];
+    info_xels_sr_pose[i].p_recv_buf = (uint8_t*)&sr_data_pose[i];
+    sr_infos_pose.xel_count++;
+  }
+  sr_infos_pose.is_info_changed = true;
+
+
+
+
 
   // Fill the members of structure to syncWrite using internal packet buffer
   sw_infos.packet.p_buf = nullptr;
@@ -188,36 +228,47 @@ void loop() {
   int n = Wire.requestFrom(4, sizeof(motor_control));    
   Wire.readBytes((byte*)&motor_control, sizeof(motor_control));
   // put your main code here, to run repeatedly:
-  uint8_t recv_cnt;
   // Update the SyncWrite packet status
   sw_data[0].goal_position = motor_control.left;
   sw_data[1].goal_position = motor_control.right;
   sw_infos.is_info_changed = true;
 
-  
+  recv_cnt = 0;
+
   // Build a SyncWrite Packet and transmit to DYNAMIXEL  
-  dxl.syncWrite(&sw_infos);
-  // Transmit predefined SyncRead instruction packet
-  // and receive a status packet from each DYNAMIXEL
   if (counter %10 == 0)
   {
+  // Transmit predefined SyncRead instruction packet
+  // and receive a status packet from each DYNAMIXEL
     recv_cnt = dxl.syncRead(&sr_infos_load, 100);
     if(recv_cnt > 0)
     {
       motor_states.load_right = sr_data_load[1].present_data;
       motor_states.load_left = sr_data_load[0].present_data;
     }
+    motor_states.error_load = recv_cnt;
+    // if (counter %20 == 0)
+    // {
+    //   recv_cnt = dxl.syncRead(&sr_infos_pose, 100);
+    //   if(recv_cnt > 0)
+    //   {
+    //     motor_states.pose_right = sr_data_pose[1].present_data;
+    //     motor_states.pose_left = sr_data_pose[0].present_data;
+    //   }
+    //   else
+    //   {
+    //     motor_states.error_pose = dxl.getLastLibErrCode();
+    //   }
+    //   motor_states.error_pose = recv_cnt;
 
-
-    recv_cnt = dxl.syncRead(&sr_infos_pose, 100);
-    if(recv_cnt > 0)
-    {
-      motor_states.pose_right = sr_data_pose[1].present_data;
-      motor_states.pose_left = sr_data_pose[0].present_data;
-    }
+    // }
     Wire.beginTransmission(4); // transmit to device #4
     Wire.write((byte *)&motor_states, sizeof(motor_states));  /*send string on request */
     Wire.endTransmission();    // stop transmitting
+  }
+  else
+  {
+    dxl.syncWrite(&sw_infos);
   }
   counter++;
   delay(10);

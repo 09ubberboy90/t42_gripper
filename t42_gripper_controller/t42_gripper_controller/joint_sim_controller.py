@@ -23,6 +23,11 @@ class GripperController(Node):
         self.motor_pub = self.create_publisher(JointState, 't42_motor_control', 10)
         self.motor_sub = self.create_subscription(JointState, 't42_motor_states', self.motor_callback, 10)
 
+        self.thumb_history = np.zeros(10)
+        self.index_history = np.zeros(10)
+        self.thumb_position = np.zeros(5)
+        self.index_position = np.zeros(5)
+
     def motor_callback(self, incoming:JointState):
         outgoing = Float64MultiArray()
         idx_remap = {}
@@ -31,9 +36,19 @@ class GripperController(Node):
         for idx, key in enumerate(incoming.name):
             idx_remap[key] = idx
         try:
-            outgoing.data = [0.0,0.0,100.0,100.0,100.0,
-                        self.adjust_feedback(incoming.effort[idx_remap["right"]]), 
-                        self.adjust_feedback(incoming.effort[idx_remap["left"]]), 
+            self.thumb_history = np.roll(self.thumb_history,-1)
+            self.thumb_history[-1] = self.adjust_feedback(incoming.effort[idx_remap["right"]])
+            self.index_history = np.roll(self.index_history,-1)
+            self.index_history[-1] = self.adjust_feedback(incoming.effort[idx_remap["left"]])
+
+            print("thumb",self.thumb_history)
+            print("index", self.index_history)
+            outgoing.data = [
+                        # np.mean(self.thumb_history), 
+                        # np.mean(self.index_history),
+                        0.0,0.0,0.0,0.0,0.0,
+                        np.median(self.thumb_history), 
+                        np.median(self.index_history),
                         0.0,0.0,0.0] # no vibration
         except:
             return
@@ -47,12 +62,19 @@ class GripperController(Node):
             joint_dict[key] = incoming.position[idx]
         thumb = -joint_dict["thumb_mcp"] +  joint_dict["thumb_pip"]  # 1.5 - 3.3
         index = -joint_dict["index_pip"] +  joint_dict["index_dip"]  #0.5 3.3
-        outgoing.position = [self.thumb_degree(thumb), self.index_degree(index)] 
+        self.thumb_position = np.roll(self.thumb_position,-1)
+        self.thumb_position[-1] = self.thumb_degree(thumb)
+        self.index_position = np.roll(self.index_position,-1)
+        self.index_position[-1] = self.index_degree(index)
+
+
+        outgoing.position = [np.mean(self.thumb_position), np.mean(self.index_position)] 
         self.motor_pub.publish(outgoing)
         
     def adjust_feedback(self, val):
+        val = max(min(val,512),0) #clamp to 50% max load
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return float((abs(val)%1024) * 100 / 1024)
+        return float((abs(val)%512) * 100 / 512)
     
     def index_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
