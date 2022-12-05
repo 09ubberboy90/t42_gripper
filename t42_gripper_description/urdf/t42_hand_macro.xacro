@@ -68,6 +68,56 @@
             </geometry>
         </collision>
     </link>
+    <link name="arduino_controller">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/arduino_controller.stl"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0.1 0.1 0.1 1"/>
+            </material>
+        </visual>
+        <!-- <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia
+            ixx="0.0" ixy="0.0" ixz="0.0"
+            iyy="0.0" iyz="0.0"
+            izz="0.0"/>
+        </inertial> -->
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/arduino_controller.stl"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="arduino_pc">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/arduino_pc.stl"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0.1 0.1 0.1 1"/>
+            </material>
+        </visual>
+        <!-- <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia
+            ixx="0.0" ixy="0.0" ixz="0.0"
+            iyy="0.0" iyz="0.0"
+            izz="0.0"/>
+        </inertial> -->
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://t42_gripper_description/meshes/arduino_pc.stl"/>
+            </geometry>
+        </collision>
+    </link>
 
 
     <link name="swivel_1">
@@ -216,6 +266,16 @@
         <origin rpy="0 0 0" xyz="0 0.000000 0.000000" />
         <parent link="t42_base_link" />
         <child link="swivel_1" />
+    </joint>
+    <joint name="t42_base_link_to_arduino_pc" type="fixed">
+        <origin rpy="1.57 0 1.57" xyz="0.02655 0.0 0.05153"/>
+        <parent link="t42_base_link" />
+        <child link="arduino_pc" />
+    </joint>
+    <joint name="t42_base_link_to_arduino_controller" type="fixed">
+        <origin rpy="1.57 0 1.57" xyz="0.02655 0.0 -0.059"/>
+        <parent link="t42_base_link" />
+        <child link="arduino_controller" />
     </joint>
 
     <joint name="swivel_1_to_finger_1_1" type="revolute">
