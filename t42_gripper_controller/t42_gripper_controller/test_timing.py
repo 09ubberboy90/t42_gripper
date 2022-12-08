@@ -1,7 +1,8 @@
 import sys
-import serial
 import time
+
 import numpy as np
+import serial
 
 ## Used with Slave and master ino files 
 

@@ -1,13 +1,10 @@
 # Importing Libraries
-import serial
-
 import rclpy
-from rclpy.node import Node
-
-from sensor_msgs.msg import JointState
+import serial
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-
+from rclpy.node import Node
+from sensor_msgs.msg import JointState
 
 
 class GripperController(Node):
