@@ -35,7 +35,7 @@ void setup()
   Wire.begin(4);                // join i2c bus with address #4
   Wire.onReceive(receiveEvent); // register event
   Wire.onRequest(requestEvent);
-  Serial.begin(2000000); // start serial for output
+  Serial.begin(115200); // start serial for output
   Serial.println(DYNAMIXEL::getControlTableItemInfo(MX28_2, ControlTableItem::PRESENT_LOAD).addr);
   Serial.println(DYNAMIXEL::getControlTableItemInfo(MX28_2, ControlTableItem::PRESENT_LOAD).addr_length);
   // Serial.println(sizeof(motor_control));
