@@ -47,6 +47,7 @@ class GripperController(Node):
             if el:
                 # print(len(el.encode('utf-8')))
                 self.parse_response(el)
+        print(self.requested)
         self.arduino.write(f"Right:{self.requested['right']},Left:{self.requested['left']}\n".encode('utf-8'))
 
     def convert_to_degrees(self, val):

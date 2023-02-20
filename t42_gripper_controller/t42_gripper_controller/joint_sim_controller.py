@@ -18,7 +18,7 @@ class GripperController(Node):
         self.glove_pub = self.create_publisher(Float64MultiArray, '/senseglove/rh/joint_position_controller/commands', 10)
         self.glove_sub = self.create_subscription(JointState, '/senseglove/rh/joint_states',self.senseglove_callback, 10)
 
-        self.motor_pub = self.create_publisher(JointState, 't42_motor_control', 10)
+        self.motor_pub = self.create_publisher(JointState, 'senseglove_motor', 10)
         self.motor_sub = self.create_subscription(JointState, 't42_motor_states', self.motor_callback, 10)
 
         self.thumb_history = np.zeros(10)
@@ -39,8 +39,8 @@ class GripperController(Node):
             self.index_history = np.roll(self.index_history,-1)
             self.index_history[-1] = self.adjust_feedback(incoming.effort[idx_remap["left"]])
 
-            print("thumb",self.thumb_history)
-            print("index", self.index_history)
+            # print("thumb",self.thumb_history)
+            # print("index", self.index_history)
             outgoing.data = [
                         # np.mean(self.thumb_history), 
                         # np.mean(self.index_history),
@@ -72,15 +72,18 @@ class GripperController(Node):
     def adjust_feedback(self, val):
         val = max(min(val,512),0) #clamp to 50% max load
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+        return 0.0
+        ## Disabled for now -> Too much delay
         return float((abs(val)%512) * 100 / 512)
     
     def index_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return min(max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0),250.0) ## Max 250 degree for safety
+        return min(max(((val - 1.5) * 225) / (3.3 - 1.5), 0.0),225.0) ## Max 250 degree for safety
     
     def thumb_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return min(max(((val - 1.5) * 250) / (3.3 - 1.5), 0.0),250.0) ## Max 250 degree for safety
+        print(val, min(max(((val - 0.5) * 225) / (3.3 - 0.5), 0.0),225.0))
+        return min(max(((val - 1.5) * 225) / (3.3 - 1.5), 0.0),225.0) ## Max 250 degree for safety
 
 
 
