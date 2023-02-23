@@ -78,11 +78,11 @@ class GripperController(Node):
     
     def index_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return min(max(((val - 1.5) * 130) / (3.3 - 1.5), 0.0),130.0) ## Max 250 degree for safety
+        return min(max(((val - 1.5) * 115) / (3.3 - 1.5), 0.0),115.0) ## Max 250 degree for safety
     
     def thumb_degree(self, val):
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return min(max(((val - 1.5) * 130) / (3.3 - 1.5), 0.0),130.0) ## Max 250 degree for safety
+        return min(max(((val - 1.5) * 115) / (3.3 - 1.5), 0.0),115.0) ## Max 250 degree for safety
 
 
 
