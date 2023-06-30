@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             "gripper_controller = t42_gripper_controller.position_controller:main",
             "test_motors = t42_gripper_controller.test_motors:main",
+            "adjust_offset = t42_gripper_controller.adjust_offset:main",
             "joint_sim_controller = t42_gripper_controller.joint_sim_controller:main"
         ],
     },
